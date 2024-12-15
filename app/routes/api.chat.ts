@@ -29,23 +29,26 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
 
         console.log(`Reached max token limit (${MAX_TOKENS}): Continuing message (${switchesLeft} switches left)`);
 
-        messages.push({ role: 'assistant', content });
+        console.log({ role: 'assistant', content });
+        messages.push({ role: 'user', content: CONTINUE_PROMPT });
         messages.push({ role: 'user', content: CONTINUE_PROMPT });
 
         const result = await streamText(messages, context.cloudflare.env, options);
 
-        return stream.switchSource(result.toAIStream());
+        return stream.switchSource(result.toDataStream());
       },
     };
 
     const result = await streamText(messages, context.cloudflare.env, options);
 
-    stream.switchSource(result.toAIStream());
+    console.log(result);
+
+    stream.switchSource(result.toDataStream());
 
     return new Response(stream.readable, {
       status: 200,
       headers: {
-        contentType: 'text/plain; charset=utf-8',
+        'Content-Type': 'text/plain; charset=utf-8',
       },
     });
   } catch (error) {
